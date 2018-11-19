@@ -85,11 +85,11 @@ int Dmax = ... ;
 int Dda = ... ;
  
 //Solution à trouver pour micro-compagnie 1
-// e1 [0 1 2]
-// e2 [0 1 2]
-// e3 [0 1 2]
-// e4 [0 1 2]
-// e5 [0 0 0]
+// e1 [0 1 2] pilots
+// e2 [0 1 2] pilots
+// e3 [0 1 2] cabine
+// e4 [0 1 2] cabine
+// e5 [0 0 0] cabine
 // Variables
 
 //Intervals vols
@@ -113,7 +113,23 @@ maximize sum(v in Vo0) Npayant[v] ;
 constraints {
 
 	
-
+	SeqPilot[0][0]==0;
+	SeqPilot[0][1]==1;
+	SeqPilot[0][2]==2;
+	SeqPilot[1][0]==0;
+	SeqPilot[1][1]==1;
+	SeqPilot[1][2]==2;
+	
+	SeqPN[0][0]==0;
+	SeqPN[0][1]==1;
+	SeqPN[0][2]==2;
+	SeqPN[1][0]==0;
+	SeqPN[1][1]==1;
+	SeqPN[1][2]==2;
+	SeqPN[2][0]==0;
+	SeqPN[2][1]==0;
+	SeqPN[2][2]==0;
+	
 
 	//Contraintes personels pour vols peut-etre un impact
 	forall(v in Vo0){

@@ -84,7 +84,12 @@ int Dmax = ... ;
 /*Duree forfaitaire de transfert domicile-aeroport*/
 int Dda = ... ;
  
-
+//Solution à trouver pour micro-compagnie 1
+// e1 [0 1 2]
+// e2 [0 1 2]
+// e3 [0 1 2]
+// e4 [0 1 2]
+// e5 [0 0 0]
 // Variables
 
 //Intervals vols

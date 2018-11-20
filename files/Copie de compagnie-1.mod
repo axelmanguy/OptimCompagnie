@@ -92,7 +92,7 @@ int Dda = ... ;
 // e5 [0 0 0] cabine
 // Variables
 
-//Intervals vols
+//sequences vols
 dvar int SeqPilot[p in pilots][v in Vo0] in Vo0;
 dvar int SeqPN[p in pn][v in Vo0] in Vo0;
 dvar int SeqP[p in Em][v in Vo0] in Vo0;
@@ -102,49 +102,35 @@ dexpr int AffectPilot[p in pilots][v in Vo0] = SeqPilot[p][v] != 0 ; //ou in 0..
 dexpr int AffectPN[p in pn][v in Vo0] = SeqPN[p][v] != 0 ;
 dexpr int AffectP[p in Em][v in Vo0] = SeqP[p][v] != 0;*/
 
-dexpr int NbvolPilots[p in pilots] = sum(v in Vo0) SeqPilot[p][v] != 0;
-dexpr int NbvolPN[p in pn] = sum(v in Vo0) SeqPN[p][v] != 0;
-dexpr int NbvolP[p in Em] = sum(v in Vo0) SeqP[p][v] != 0;
+dexpr int NbvolPilots[p in pilots] = sum(v in Ve) SeqPilot[p][v] != 0;
+dexpr int NbvolPN[p in pn] = sum(v in Ve) SeqPN[p][v] != 0;
+dexpr int NbvolP[p in Em] = sum(v in Ve) SeqP[p][v] != 0;
 
-dexpr int Npayant[v in Vo0] = Np[v] - sum(p in Em) (SeqP[p][v] != 0) ;
+dexpr int NbPilotsVols[v in Vo] = sum(v2 in Ve,p in pilots) SeqPilot[p][v2] == v;
+dexpr int NbPNVols[v in Vo] = sum(v2 in Ve, p in pn) SeqPN[p][v2] == v;
+dexpr int NbPVols[v in Vo] = sum(v2 in Ve, p in Em) SeqP[p][v2] == v;
 
-maximize sum(v in Vo0) Npayant[v] ; 
+dexpr int Npayant[v in Vo] = Np[v] - NbPVols[v] ;
+
+maximize sum(v in Vo) Npayant[v] ; 
  
 constraints {
 
-	
-	SeqPilot[0][0]==0;
-	SeqPilot[0][1]==1;
-	SeqPilot[0][2]==2;
-	SeqPilot[1][0]==0;
-	SeqPilot[1][1]==1;
-	SeqPilot[1][2]==2;
-	
-	SeqPN[0][0]==0;
-	SeqPN[0][1]==1;
-	SeqPN[0][2]==2;
-	SeqPN[1][0]==0;
-	SeqPN[1][1]==1;
-	SeqPN[1][2]==2;
-	SeqPN[2][0]==0;
-	SeqPN[2][1]==0;
-	SeqPN[2][2]==0;
-	
-
-	//Contraintes personels pour vols peut-etre un impact
-	forall(v in Vo0){
+	//Contraintes personels pour vols
+	forall(v in Vo){
 		//2 pilots par vol
-		(sum(p in pilots) (SeqPilot[p][v] != 0)) >=2;
+		NbPilotsVols[v] >=2;
 		//Nec personel naviguant par vol
-		(sum(p in pn) (SeqPN[p][v] != 0)) >= Nec[v];
+		NbPNVols[v] >= Nec[v];
 	}
 	
 	//Contraintes sur les personels
 	forall(p in pilots){
+		SeqPilot[p][0]==0;	
+	
 		//nombre de vol maximum
 		NbvolPilots[p] <= Nvmax;
-		//ville de depart = ville d'origine
-		
+		//ville de depart = ville d'origine		
 		NbvolPilots[p]>0 => Va[Ov[SeqPilot[p][1]]] == Vh[p];
 		//ville d'arrivée= ville d'origine'
 		NbvolPilots[p]>0 =>Va[Dv[SeqPilot[p][NbvolPilots[p]]]] == Vh[p];
@@ -154,8 +140,11 @@ constraints {
 		NbvolPilots[p]>0 =>Td[SeqPilot[p][1]] >= 0;
 	}
 	forall(p in pn){
+		SeqPN[p][0]==0;	
+	
+		//nombre de vol maximum
 		NbvolPN[p] <= Nvmax;
-		
+		////ville de depart = ville d'origine	
 		NbvolPN[p]>0 =>Va[Ov[SeqPN[p][1]]] == Vh[p];
 		//ville d'arrivée= ville d'origine'
 		NbvolPN[p]>0 =>Va[Dv[SeqPN[p][NbvolPN[p]]]] == Vh[p];
@@ -165,17 +154,45 @@ constraints {
 		NbvolPN[p]>0 =>Td[SeqPN[p][1]] >= 0;
 	}
 	
-	forall(p in pilots,v in Ve : v < Nvmax){
-		//temps de transit	
-		v < NbvolPilots[p] => Td[v+1]-Ta[v] >= Dt[Ov[v+1]][Dv[v]];
-		//sequence
-		v < NbvolPilots[p] => Td[v+1] >= Ta[v];
-		
+	//contraintes des correspondances
+	forall(p in pilots){
+		forall(v in 1..(Nvmax-1)){
+			SeqPilot[p][v]>0 && SeqPilot[p][v+1]>0 =>
+			Td[SeqPilot[p][v+1]]-Td[SeqPilot[p][v+1]] >=
+			Dt[Dv[SeqPilot[p][v]]][Ov[SeqPilot[p][v+1]]];
+		}	
 	}
-	forall(p in pn,v in Ve : v < Nvmax){
-		v < NbvolPN[p] => Td[v+1]-Ta[v] >= Dt[Ov[v+1]][Dv[v]];
-		v < NbvolPN[p] => Td[v+1] >= Ta[v];
+	
+	//contraintes sur l'ordre et la coherence des vols
+	forall(p in pilots){
+		forall(v,v2 in Ve : v < v2){
+		//deux vols se suivent			
+		v2 <NbvolP[p] => Td[SeqPilot[p][v]] < Td[SeqPilot[p][v2]];
+		//deux vols differents
+		v2 < Nvmax => SeqPilot[p][v] != SeqPilot[p][v2];	 
+		 }	
 	}
+	
+		//contraintes des correspondances
+	forall(p in pn){
+		forall(v in 1..(Nvmax-1)){
+			SeqPN[p][v]>0 && SeqPN[p][v+1]>0 =>
+			Td[SeqPN[p][v+1]]-Td[SeqPN[p][v+1]] >=
+			Dt[Dv[SeqPN[p][v]]][Ov[SeqPN[p][v+1]]];
+		}
+	}
+	
+	//contraintes sur l'ordre et la coherence des vols
+	forall(p in pn){
+		forall(v,v2 in Ve : v < v2){
+		//deux vols se suivent			
+		v2 <Nvmax => Td[SeqPN[p][v]] < Td[SeqPN[p][v2]];
+		//deux vols differents
+		v2 < Nvmax => SeqPN[p][v] != SeqPN[p][v2];	 
+		 }	
+	}
+	
+	
     
 }
  

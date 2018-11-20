@@ -56,7 +56,7 @@ range Em = 1..Ne ;
  
 /*Types possibles (pilote = 1; cabine = 0)*/
 range Tys = 0..1 ;
-/*Type des employs*/
+/*Type des employes*/
 int Ty[Em] = ... ;
 assert forall(e in Em) 0 <= Ty[e] <= 1 ;
 /*Ville d'habitation des employs */
@@ -110,7 +110,7 @@ assert forall(ci in Ci) (Dda + Dc[ci]) <= Dmax  ;
 dvar int+ employ[Tys][Ci];
 
 // maximize
-
+/*
 	// maximize price
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
 (employ[1][ci] + employ[0][ci])));
@@ -118,7 +118,7 @@ maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
 	// maximize et minimize temps d'absence
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
 (employ[1][ci] + employ[0][ci]))) - 0.0001*sum(ci in Ci)(Dc[ci]*(employ[0][ci]+employ[1][ci]));
- 	
+ */	
  	// maximize et minimize vols
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
 (employ[1][ci] + employ[0][ci]))) - 0.0001*sum(ci in Ci)(Nvc[ci]*(employ[0][ci]+employ[1][ci]));

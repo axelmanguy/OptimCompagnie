@@ -76,65 +76,76 @@ int Dmax = ... ;
 int Dda = ... ;
  
 
-// Variable de decision
+// Variable de decision, affectaton des vols aux employee.
+// chaque employee se voit affectee une liste de vols dans l'ordre logique et peut y etre passager, pilote ou personel cabine
 dvar int affectation[e in Em][v in VePlus0] in Vo0;
 
-// expression de calcul
+// expressions
 //nombre de vol par employees
 dexpr int NbVolEmp[e in Em] = sum(v in Ve)(affectation[e][v] !=0);
-
-//nombre de pilotes par vol
-dexpr int NbPilotVol[v in Vo] = sum(e in Em, v2 in Ve)(affectation[e][v2] ==v && Ty[e] ==0);
-//nombre de PersonelCabine par vol
+//PersonelCabine par vol
 dexpr int NbPcVol[v in Vo] = sum(e in Em, v2 in Ve)(affectation[e][v2] ==v && Ty[e] ==1);
+//Pilotes par vol
+dexpr int NbPilotVol[v in Vo] = sum(e in Em, v2 in Ve)(affectation[e][v2] ==v && Ty[e] ==0);
+
 
 //benefices des vols (tout les emplyee -2 pilotes - le nombre de personel)
-dexpr int ben = sum(v in Vo) (Np[v]-(NbPilotVol[v]+2)-(NbPcVol[v]+Nec[v]))*Pr[v];
+dexpr int benefices = sum(v in Vo) (Np[v]-(NbPilotVol[v]+2)-(NbPcVol[v]+Nec[v]))*Pr[v];
 
-maximize ben; 
+maximize benefices; 
  
 constraints {
 
-//Contraintes sur les personels de bords
-forall(v in Vo){
-	NbPilotVol[v] >= 2;
-	NbPcVol[v] >= Nec[v];
-}
-//Contraintes sur les employees
+/**
+	Contraintes de planning des vols
+**/
+
+//Contrainte d'intialisation
+//La sequence des employee commence par un 0
 forall(e in Em){
-	NbVolEmp[e] > 0 => Va[Ov[affectation[e][1]]]==Vh[e];
-	NbVolEmp[e] > 0 => Va[Dv[affectation[e][NbVolEmp[e]]]] == Vh[e];
-	Ta[affectation[e][NbVolEmp[e]]]-Td[affectation[e][1]]+Dda <= Dmax;
+	affectation[e][0]==0;
+	}
+	
+//Contrainte de fin de journee
+//lorsque la journee de l'employee est terminee tout est mis a 0
+forall(e in Em, v in Ve){
+	v <	NbVolEmp[e] => affectation[e][v] >0;
 }
 
-//Contraintes logiques sur les vols
-forall(e in Em){
-	forall(v in 1..(Nvmax-1)){
+//Contraintes sur les temps de transit entre deux vols
+//
+forall(e in Em,v in 1..(Nvmax-1)){
 	affectation[e][v] >0 && affectation[e][v+1] >0 => 
 	Td[affectation[e][v+1]] - Ta[affectation[e][v]] >=
 	Dt[Dv[affectation[e][v]]][Ov[affectation[e][v+1]]];
-	}
 }
+
 //Contrainte de succesion des vols
 forall(e in Em){
 	forall(v,v2 in Ve : v < v2){
 		v2<	NbVolEmp[e] => Td[affectation[e][v]] < Td[affectation[e][v]];
+		v2 < NbVolEmp[e] => affectation[e][v] != affectation[e][v2];
 	}
 }
-//Contrainte de fin du tableau
-forall(e in Em){
-	forall(v in Ve){
-	v <	NbVolEmp[e] => affectation[e][v] >0;
-	}
+
+/**
+	Contraintes sur les employees
+**/
+
+//Contraintes sur les personels de bord
+forall(v in Vo){
+	//Au moins 2 pilotes
+	NbPilotVol[v] >= 2;
+	//Au moins Nec employee
+	NbPcVol[v] >= Nec[v];
 }
-//Contrainte d'intialisation
+//Contraintes sur les employees
 forall(e in Em){
-	affectation[e][0]==0;
-	}
-//Contrainte de difference des vols realisés
-forall(e in Em){
-	forall(v,v2 in Ve : v<v2){
-	v2 < NbVolEmp[e] => affectation[e][v] != affectation[e][v2];
-	}
+	//un employee effectuant une journee de travail part de chez lui
+	NbVolEmp[e] > 0 => Va[Ov[affectation[e][1]]]==Vh[e];
+	//un employee effectuant une journee de travail rentre chez lui
+	NbVolEmp[e] > 0 => Va[Dv[affectation[e][NbVolEmp[e]]]] == Vh[e];
+	//un employee ne doit pas travailler plus que le temps negocié dans la convention collective
+	Ta[affectation[e][NbVolEmp[e]]]-Td[affectation[e][1]]+Dda <= Dmax;
 }
 }

@@ -43,35 +43,35 @@ assert forall(ordered a1, a2 in Ae : Va[a1] != Va[a2]) Dt[a1][a2] == Dtinf ;
  
 /*Capacit des vols*/
 int Np[Vo0] = ... ;
-/*Nombre d'employs en cabine ncessaires sur les vols*/
+/*Nombre d'affectations en cabine ncessaires sur les vols*/
 int Nec[Vo0] = ... ;
 assert forall(vo in Vo) Nec[vo] + 2 <= Np[vo] ;
  
 /*Prix des places sur les vols*/
 int Pr[Vo0] = ... ;
  
-/*Nombre d'employs*/
+/*Nombre d'affectations*/
 int Ne = ... ;
 range Em = 1..Ne ;
  
 /*Types possibles (pilote = 1; cabine = 0)*/
 range Tys = 0..1 ;
-/*Type des employes*/
+/*Type des affectationes*/
 int Ty[Em] = ... ;
 assert forall(e in Em) 0 <= Ty[e] <= 1 ;
-/*Ville d'habitation des employs */
+/*Ville d'habitation des affectations */
 int Vh[Em] = ... ;
 assert forall(e in Em) 1 <= Vh[e] <= Ni ;
  
-/*Nombre d'employs par type et ville d'habitation*/
+/*Nombre d'affectations par type et ville d'habitation*/
 int Netv[ty in 0..1][vi in Vi] =
     sum(e in Em) ((Ty[e] == ty) && (Vh[e] == vi));
 
-/*Nombre maximum de vols par jour par employ*/
+/*Nombre maximum de vols par jour par affectation*/
 int Nvmax = ... ;
 range Ve = 1..Nvmax ;
  
-/*Dure maximum d'absence par jour par employ*/
+/*Dure maximum d'absence par jour par affectation*/
 int Dmax = ... ;
  
 /*Duree forfaitaire de transfert domicile-aeroport*/
@@ -92,7 +92,7 @@ int Dvc[ci in Ci] = Vs[ci][Nvc[ci]] ;
 int Dc[ci in Ci] = (Ta[Dvc[ci]] - Td[Pvc[ci]]) ;
 /*Participation d'un vol  un circuit*/
 int Vc[vo in Vo][ci in Ci] = (sum(k in Ve) (Vs[ci][k] == vo)) ;
-/*Possibilit de participation d'un employe d'une ville  un circuit*/
+/*Possibilit de participation d'un affectatione d'une ville  un circuit*/
 int Evc[vi in Vi][ci in Ci] = (Va[Ov[Vs[ci][1]]] == vi) ;
  
 assert forall(ci in Ci, k in Ve : k <= Nvc[ci]) 1 <= Vs[ci][k] <= Nv ;
@@ -107,21 +107,21 @@ assert forall(ci in Ci) (Dda + Dc[ci]) <= Dmax  ;
               
 // Variables
 
-dvar int+ employ[Tys][Ci];
+dvar int+ affectation[Tys][Ci];
 
 // maximize
 /*
 	// maximize price
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(employ[1][ci] + employ[0][ci])));
+(affectation[1][ci] + affectation[0][ci])));
 
 	// maximize et minimize temps d'absence
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(employ[1][ci] + employ[0][ci]))) - 0.0001*sum(ci in Ci)(Dc[ci]*(employ[0][ci]+employ[1][ci]));
+(affectation[1][ci] + affectation[0][ci]))) - 0.0001*sum(ci in Ci)(Dc[ci]*(affectation[0][ci]+affectation[1][ci]));
  */	
  	// maximize et minimize vols
 maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(employ[1][ci] + employ[0][ci]))) - 0.0001*sum(ci in Ci)(Nvc[ci]*(employ[0][ci]+employ[1][ci]));
+(affectation[1][ci] + affectation[0][ci]))) - 0.0001*sum(ci in Ci)(Nvc[ci]*(affectation[0][ci]+affectation[1][ci]));
  
  
 // constraints {
@@ -131,21 +131,17 @@ constraints{
 
 	// constraint - Sur chaque vol, il y a deux pilotes et le personnel correspondant
 forall(v in Vo) {
-	sum(ci in Ci : Vc[v][ci]>0) employ[1][ci]>=2;
-	sum(ci in Ci : Vc[v][ci]>0) employ[0][ci]>=Nec[v];
+	sum(ci in Ci : Vc[v][ci]>0) affectation[1][ci]>=2;
+	sum(ci in Ci : Vc[v][ci]>0) affectation[0][ci]>=Nec[v];
 
 }		
 
 
 		
-	// constraint - Localisation des employes au depart et l'arrivee du circuit
-forall(vi in Vi) {
-	forall (t in Tys) {
-		sum(ci in Ci : Va[Ov[Pvc[ci]]] == vi) employ[t][ci] <= Netv[t][vi];
+	// constraint - Localisation des affectationes au depart et l'arrivee du circuit
+forall(vi in Vi,t in Tys) {
+		sum(ci in Ci : Va[Ov[Pvc[ci]]] == vi) affectation[t][ci] <= Netv[t][vi];
 	}
-
-
-}
 
 
 }

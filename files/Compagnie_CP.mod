@@ -123,7 +123,7 @@ forall(e in Em,v in 1..(Nvmax-1)){
 //Contrainte de succesion des vols
 forall(e in Em){
 	forall(v,v2 in Ve : v < v2){
-		v2<	NbVolEmp[e] => Td[affectation[e][v]] < Td[affectation[e][v]];
+		v2<	NbVolEmp[e] => Td[affectation[e][v]] < Td[affectation[e][v2]];
 		v2 < NbVolEmp[e] => affectation[e][v] != affectation[e][v2];
 	}
 }
@@ -143,7 +143,7 @@ forall(v in Vo){
 forall(e in Em){
 	//un employee effectuant une journee de travail part de chez lui
 	NbVolEmp[e] > 0 => Va[Ov[affectation[e][1]]]==Vh[e];
-	//un employee effectuant une journee de travail rentre chez lui
+	//un employee effectuant une journee de travail rentre  chez lui
 	NbVolEmp[e] > 0 => Va[Dv[affectation[e][NbVolEmp[e]]]] == Vh[e];
 	//un employee ne doit pas travailler plus que le temps negocié dans la convention collective
 	Ta[affectation[e][NbVolEmp[e]]]-Td[affectation[e][1]]+Dda <= Dmax;

@@ -109,20 +109,8 @@ assert forall(ci in Ci) (Dda + Dc[ci]) <= Dmax  ;
 
 dvar int+ affectation[Tys][Ci];
 
-// maximize
-/*
 	// maximize price
-maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(affectation[1][ci] + affectation[0][ci])));
-
-	// maximize et minimize temps d'absence
-maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(affectation[1][ci] + affectation[0][ci]))) - 0.0001*sum(ci in Ci)(Dc[ci]*(affectation[0][ci]+affectation[1][ci]));
- */	
- 	// maximize et minimize vols
-maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0)
-(affectation[1][ci] + affectation[0][ci]))) - 0.0001*sum(ci in Ci)(Nvc[ci]*(affectation[0][ci]+affectation[1][ci]));
- 
+maximize sum (v in Vo) (Pr[v]* (Np[v]+2+Nec[v]-sum(ci in Ci : Vc[v][ci]>0) (affectation[1][ci] + affectation[0][ci])));
  
 // constraints {
 
